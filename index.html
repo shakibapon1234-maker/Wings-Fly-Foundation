@@ -1490,6 +1490,15 @@
         await syncDataFromDatabase();
     }
 
+    // Helper to display user-friendly database errors
+    function handleDbError(error) {
+        if (error.code === '23505' || error.message.toLowerCase().includes('duplicate') || error.message.toLowerCase().includes('already exists')) {
+            showToast('This item already exists!', 'danger');
+        } else {
+            showToast(error.message, 'danger');
+        }
+    }
+
     // Config Add handler (adding source/category/account)
     async function handleConfigAdd(event, configType) {
         event.preventDefault();
@@ -1504,7 +1513,7 @@
             showLoading(false);
 
             if (error) {
-                showToast(error.message, 'danger');
+                handleDbError(error);
             } else {
                 input.value = '';
                 showToast(`Income source "${name}" added.`);
@@ -1520,7 +1529,7 @@
             showLoading(false);
 
             if (error) {
-                showToast(error.message, 'danger');
+                handleDbError(error);
             } else {
                 input.value = '';
                 showToast(`Expense sector "${name}" added.`);
@@ -1536,7 +1545,7 @@
             showLoading(false);
 
             if (error) {
-                showToast(error.message, 'danger');
+                handleDbError(error);
             } else {
                 input.value = '';
                 showToast(`Payment method "${name}" added.`);
