@@ -1382,7 +1382,7 @@
             ledgerState.entries = entries || [];
             ledgerState.sources = (sources || []).map(s => s.name);
             ledgerState.categories = (categories || []).map(c => c.name);
-            ledgerState.accounts = (accsErr || []).map(a => a.name);
+            ledgerState.accounts = (accounts || []).map(a => a.name);
 
             // Populate defaults if it's a completely new user
             if (ledgerState.sources.length === 0 && ledgerState.categories.length === 0 && ledgerState.accounts.length === 0) {
