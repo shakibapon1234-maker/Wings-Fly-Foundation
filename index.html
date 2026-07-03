@@ -844,13 +844,17 @@
         @keyframes fadeOut {
             from { opacity: 1; }
             to { opacity: 0; }
+        }
+
         /* Print Styles */
         @media print {
             body {
                 background: white !important;
-                color: black !important;
+                color: #0a0e27 !important;
+                font-family: 'Inter', sans-serif;
+                font-size: 11pt;
             }
-            #bg-canvas, header, .stats-grid, .sidebar-column, .ledger-controls, .ledger-actions, .btn-danger, .btn-primary, .toast, #db-config-screen, #auth-screen, .panel-title i, th:last-child, td:last-child {
+            #bg-canvas, header, .stats-grid, .sidebar-column, .ledger-controls, .ledger-actions, .btn-danger, .btn-primary, .toast, #db-config-screen, #auth-screen, .panel-title i {
                 display: none !important;
             }
             .container {
@@ -868,13 +872,10 @@
                 box-shadow: none !important;
                 padding: 0 !important;
                 margin: 0 !important;
-                color: black !important;
+                color: #0a0e27 !important;
             }
             .panel-title {
-                color: black !important;
-                border-bottom: 2px solid #333 !important;
-                padding-bottom: 10px !important;
-                font-size: 1.5rem !important;
+                display: none !important;
             }
             .table-responsive {
                 overflow: visible !important;
@@ -882,20 +883,83 @@
             .ledger-table {
                 width: 100% !important;
                 border-collapse: collapse !important;
-                color: black !important;
+                color: #0a0e27 !important;
+                margin-top: 10px;
             }
             .ledger-table th, .ledger-table td {
                 border: 1px solid #ddd !important;
-                color: black !important;
-                padding: 8px !important;
+                color: #0a0e27 !important;
+                padding: 10px 8px !important;
                 background: transparent !important;
+                font-size: 10pt;
             }
             .ledger-table th {
-                background-color: #f2f2f2 !important;
+                background-color: #f8fafc !important;
                 font-weight: bold !important;
+                text-transform: uppercase;
+                font-size: 9pt;
+                letter-spacing: 0.5px;
+            }
+            .ledger-table tbody tr:nth-child(even) {
+                background-color: #fcfdfe !important;
+            }
+            .ledger-table td.amount-col.income {
+                color: #10b981 !important;
+            }
+            .ledger-table td.amount-col.expense {
+                color: #ef4444 !important;
+            }
+            .print-income {
+                color: #10b981 !important;
+            }
+            .print-expense {
+                color: #ef4444 !important;
+            }
+            .print-net-success {
+                color: #10b981 !important;
+            }
+            .print-net-danger {
+                color: #ef4444 !important;
             }
             .ledger-table th:last-child, .ledger-table td:last-child {
                 display: none !important;
+            }
+            .ledger-table tfoot tr {
+                background: #f8fafc !important;
+                border-top: 2px solid #334155 !important;
+            }
+            .ledger-table tfoot td {
+                font-weight: bold !important;
+                color: #0a0e27 !important;
+                font-size: 10pt !important;
+            }
+            .print-report-header {
+                display: flex !important;
+                justify-content: space-between;
+                align-items: center;
+                border-bottom: 2px solid #00d9ff;
+                padding-bottom: 15px;
+                margin-bottom: 25px;
+                font-family: 'Outfit', sans-serif;
+            }
+            .print-logo-ring {
+                display: block !important;
+            }
+            .print-title-area h2 {
+                font-size: 24px;
+                margin: 0;
+                color: #0a0e27;
+            }
+            .print-title-area p {
+                font-size: 13px;
+                margin: 5px 0 0 0;
+                color: #555;
+            }
+            .print-meta-area {
+                text-align: right;
+                font-size: 11px;
+                color: #555;
+                line-height: 1.5;
             }
         }
     </style>
@@ -1005,6 +1069,23 @@
      FLOW 3: MAIN LEDGER APP CONTAINER
      ========================================== -->
 <div id="main-app" class="container" style="display: none;">
+    <!-- Printable Report Header -->
+    <div class="print-report-header" style="display: none;">
+        <div class="print-logo-ring">
+            <svg viewBox="0 0 100 100" width="50" height="50" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="44" fill="none" stroke="#00d9ff" stroke-width="3" />
+                <path d="M 50,40 C 66,28 82,36 86,48 C 74,48 64,44 50,56 C 36,44 26,48 14,48 C 18,36 34,28 50,40 Z" fill="#00d9ff" />
+            </svg>
+        </div>
+        <div class="print-title-area">
+            <h2>Wings Fly Foundation</h2>
+            <p>Ledger Account Management Report</p>
+        </div>
+        <div class="print-meta-area">
+            <div><strong>Generated:</strong> <span class="print-date-val"></span></div>
+            <div><strong>User:</strong> <span class="print-user-val"></span></div>
+        </div>
+    </div>
     <!-- Header -->
     <header>
         <div class="logo-section" style="display: flex; align-items: center; gap: 15px;">
@@ -1913,7 +1994,7 @@
                     <td><span class="badge ${badgeClass}">${badgeText}</span></td>
                     <td><strong>${entry.category || 'N/A'}</strong></td>
                     <td>${entry.account || 'N/A'}</td>
-                    <td class="display-font" style="color: ${amountColor}; font-weight: 700; white-space: nowrap;">
+                    <td class="display-font amount-col ${entry.type}" style="color: ${amountColor}; font-weight: 700; white-space: nowrap;">
                         ${prefix}${entry.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ৳
                     </td>
                     <td>${entry.notes || ''}</td>
@@ -1958,7 +2039,7 @@
                 totalHTML = `
                     <tr style="border-top: 2px solid var(--border-color); background: rgba(16, 185, 129, 0.05);">
                         <td colspan="4" style="text-align: right; font-weight: bold; font-size: 0.95rem;">Total Income:</td>
-                        <td style="color: var(--accent-success); font-weight: bold; font-size: 0.95rem; white-space: nowrap;">${incomeStr}</td>
+                        <td class="print-income" style="color: var(--accent-success); font-weight: bold; font-size: 0.95rem; white-space: nowrap;">${incomeStr}</td>
                         <td colspan="2"></td>
                     </tr>
                 `;
@@ -1966,19 +2047,20 @@
                 totalHTML = `
                     <tr style="border-top: 2px solid var(--border-color); background: rgba(239, 68, 68, 0.05);">
                         <td colspan="4" style="text-align: right; font-weight: bold; font-size: 0.95rem;">Total Expense:</td>
-                        <td style="color: var(--accent-danger); font-weight: bold; font-size: 0.95rem; white-space: nowrap;">${expenseStr}</td>
+                        <td class="print-expense" style="color: var(--accent-danger); font-weight: bold; font-size: 0.95rem; white-space: nowrap;">${expenseStr}</td>
                         <td colspan="2"></td>
                     </tr>
                 `;
             } else {
+                const printNetClass = netAmount >= 0 ? 'print-net-success' : 'print-net-danger';
                 totalHTML = `
                     <tr style="border-top: 2px solid var(--border-color); background: rgba(255, 255, 255, 0.02);">
                         <td colspan="4" style="text-align: right; font-weight: 700; font-size: 0.9rem; line-height: 1.6;">
-                            <span style="color: var(--accent-success); margin-right: 15px;">Total Income: ${incomeStr}</span>
-                            <span style="color: var(--accent-danger); margin-right: 15px;">Total Expense: ${expenseStr}</span>
+                            <span class="print-income" style="color: var(--accent-success); margin-right: 15px;">Total Income: ${incomeStr}</span>
+                            <span class="print-expense" style="color: var(--accent-danger); margin-right: 15px;">Total Expense: ${expenseStr}</span>
                             <span style="color: var(--text-main);">Net:</span>
                         </td>
-                        <td style="color: ${netColor}; font-weight: bold; font-size: 0.95rem; white-space: nowrap;">${netStr}</td>
+                        <td class="${printNetClass}" style="color: ${netColor}; font-weight: bold; font-size: 0.95rem; white-space: nowrap;">${netStr}</td>
                         <td colspan="2"></td>
                     </tr>
                 `;
@@ -2025,6 +2107,24 @@
     }
 
     function printLedger() {
+        // Fill print metadata
+        const dateElements = document.querySelectorAll('.print-date-val');
+        const userElements = document.querySelectorAll('.print-user-val');
+        
+        const nowStr = new Date().toLocaleString('en-US', { 
+            dateStyle: 'medium', 
+            timeStyle: 'short' 
+        });
+        
+        let userEmail = 'Local Ledger User';
+        const emailEl = document.getElementById('header-user-email');
+        if (emailEl && emailEl.textContent && emailEl.textContent !== 'email@domain.com') {
+            userEmail = emailEl.textContent;
+        }
+        
+        dateElements.forEach(el => el.textContent = nowStr);
+        userElements.forEach(el => el.textContent = userEmail);
+        
         window.print();
     }
 
