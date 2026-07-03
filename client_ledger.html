@@ -310,12 +310,115 @@
 
         /* Card panels */
         .panel {
-            background: var(--glass-bg);
             backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
             border-radius: 16px;
             padding: 24px;
             height: fit-content;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Prevent overlay from covering interactive elements */
+        .panel > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Default / Blue Theme */
+        .panel.blue-theme, .panel:not([class*="-theme"]) {
+            background: linear-gradient(135deg, rgba(0, 217, 255, 0.04) 0%, rgba(10, 14, 39, 0.75) 100%);
+            border: 1px solid rgba(0, 217, 255, 0.2);
+        }
+
+        .panel.blue-theme:hover, .panel:not([class*="-theme"]):hover {
+            transform: translateY(-4px);
+            border-color: rgba(0, 217, 255, 0.5);
+            box-shadow: 0 8px 30px rgba(0, 217, 255, 0.2);
+        }
+
+        .panel.blue-theme::after, .panel:not([class*="-theme"])::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(rgba(0, 217, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 217, 255, 0.03) 1px, transparent 1px);
+            background-size: 15px 15px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Green Theme */
+        .panel.green-theme {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.04) 0%, rgba(10, 14, 39, 0.75) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .panel.green-theme:hover {
+            transform: translateY(-4px);
+            border-color: rgba(16, 185, 129, 0.5);
+            box-shadow: 0 8px 30px rgba(16, 185, 129, 0.2);
+        }
+
+        .panel.green-theme::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(rgba(16, 185, 129, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(16, 185, 129, 0.03) 1px, transparent 1px);
+            background-size: 15px 15px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Red Theme */
+        .panel.red-theme {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.04) 0%, rgba(10, 14, 39, 0.75) 100%);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .panel.red-theme:hover {
+            transform: translateY(-4px);
+            border-color: rgba(239, 68, 68, 0.5);
+            box-shadow: 0 8px 30px rgba(239, 68, 68, 0.2);
+        }
+
+        .panel.red-theme::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(rgba(239, 68, 68, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(239, 68, 68, 0.03) 1px, transparent 1px);
+            background-size: 15px 15px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Purple Theme */
+        .panel.purple-theme {
+            background: linear-gradient(135deg, rgba(181, 55, 242, 0.04) 0%, rgba(10, 14, 39, 0.75) 100%);
+            border: 1px solid rgba(181, 55, 242, 0.2);
+        }
+
+        .panel.purple-theme:hover {
+            transform: translateY(-4px);
+            border-color: rgba(181, 55, 242, 0.5);
+            box-shadow: 0 8px 30px rgba(181, 55, 242, 0.2);
+        }
+
+        .panel.purple-theme::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(rgba(181, 55, 242, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(181, 55, 242, 0.03) 1px, transparent 1px);
+            background-size: 15px 15px;
+            pointer-events: none;
+            z-index: 0;
         }
 
         .panel-title {
@@ -573,10 +676,7 @@
         }
 
         .settings-card {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 24px;
+            height: fit-content;
         }
 
         .settings-header {
@@ -918,7 +1018,7 @@
             <!-- Sidebar: Add new transaction & account status -->
             <div class="sidebar-column">
                 <!-- Add transaction panel -->
-                <div class="panel" style="margin-bottom: 25px;">
+                <div class="panel blue-theme" style="margin-bottom: 25px;">
                     <h2 class="panel-title"><i class="fa-solid fa-circle-plus" style="color: var(--accent-primary);"></i> Add Transaction</h2>
                     
                     <form id="transaction-form" onsubmit="handleTransactionSubmit(event)">
@@ -972,7 +1072,7 @@
                 </div>
 
                 <!-- Account balances list widget -->
-                <div class="panel">
+                <div class="panel blue-theme">
                     <h2 class="panel-title"><i class="fa-solid fa-building-columns" style="color: var(--accent-primary);"></i> Account Balances</h2>
                     <div class="account-list" id="account-balances-list">
                         <!-- Dynamically filled -->
@@ -984,13 +1084,13 @@
             <div class="main-column">
                 <!-- Visual insights charts row -->
                 <div class="charts-row">
-                    <div class="panel">
+                    <div class="panel green-theme">
                         <h2 class="panel-title"><i class="fa-solid fa-chart-pie" style="color: var(--accent-success);"></i> Expense Breakdown</h2>
                         <div class="chart-container">
                             <canvas id="expenseChart"></canvas>
                         </div>
                     </div>
-                    <div class="panel">
+                    <div class="panel blue-theme">
                         <h2 class="panel-title"><i class="fa-solid fa-chart-simple" style="color: var(--accent-primary);"></i> Income vs. Expenses</h2>
                         <div class="chart-container">
                             <canvas id="comparisonChart"></canvas>
@@ -999,7 +1099,7 @@
                 </div>
 
                 <!-- Ledger list panel -->
-                <div class="panel">
+                <div class="panel purple-theme">
                     <h2 class="panel-title"><i class="fa-solid fa-list-check" style="color: var(--accent-primary);"></i> Ledger History</h2>
                     
                     <!-- Filters -->
@@ -1071,7 +1171,7 @@
     <div id="settings-tab" class="tab-content">
         <div class="settings-grid">
             <!-- Source Management -->
-            <div class="settings-card">
+            <div class="panel green-theme settings-card">
                 <div class="settings-header">
                     <h3 class="panel-title" style="margin-bottom: 0; border: none; padding: 0;">
                         <i class="fa-solid fa-hands-holding-child" style="color: var(--accent-success);"></i> Income Sources / Investors
@@ -1090,7 +1190,7 @@
             </div>
 
             <!-- Expense Category Management -->
-            <div class="settings-card">
+            <div class="panel red-theme settings-card">
                 <div class="settings-header">
                     <h3 class="panel-title" style="margin-bottom: 0; border: none; padding: 0;">
                         <i class="fa-solid fa-tags" style="color: var(--accent-danger);"></i> Expense Categories / Sectors
@@ -1109,7 +1209,7 @@
             </div>
 
             <!-- Payment Method Management -->
-            <div class="settings-card">
+            <div class="panel blue-theme settings-card">
                 <div class="settings-header">
                     <h3 class="panel-title" style="margin-bottom: 0; border: none; padding: 0;">
                         <i class="fa-solid fa-wallet" style="color: var(--accent-primary);"></i> Payment Methods / Accounts
@@ -1128,7 +1228,7 @@
             </div>
 
             <!-- Backup & Core System Settings -->
-            <div class="settings-card" style="grid-column: 1 / -1;">
+            <div class="panel purple-theme settings-card" style="grid-column: 1 / -1;">
                 <h3 class="panel-title"><i class="fa-solid fa-database" style="color: var(--accent-primary);"></i> Data Backup & Recovery</h3>
                 <p class="form-label" style="color: var(--text-muted); margin-bottom: 20px;">
                     Your data is securely stored inside your local browser storage (LocalStorage) and never sent to any external server. 
