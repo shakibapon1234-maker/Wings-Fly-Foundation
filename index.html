@@ -854,7 +854,7 @@
                 font-family: 'Inter', sans-serif;
                 font-size: 11pt;
             }
-            #bg-canvas, header, .stats-grid, .sidebar-column, .ledger-controls, .ledger-actions, .btn-danger, .btn-primary, .toast, #db-config-screen, #auth-screen, .panel-title i {
+            #bg-canvas, header, .stats-grid, .sidebar-column, .ledger-controls, .ledger-actions, .btn-danger, .btn-primary, .toast, #db-config-screen, #auth-screen, .panel-title i, .charts-grid, .charts-row {
                 display: none !important;
             }
             .container {
@@ -1501,11 +1501,11 @@
         }
 
         // 2. Check Authentication Session
-        showLoading(true, 'Checking auth session...');
+        showLoading(true, 'Initializing...');
         const { data: { session }, error } = await supabaseClient.auth.getSession();
-        showLoading(false);
 
         if (error || !session) {
+            showLoading(false);
             document.getElementById('auth-screen').style.display = 'flex';
             return;
         }
@@ -1515,7 +1515,11 @@
         document.getElementById('header-user-email').textContent = session.user.email;
         document.getElementById('entry-date').valueAsDate = new Date();
         
-        await syncDataFromDatabase();
+        try {
+            await syncDataFromDatabase(false);
+        } finally {
+            showLoading(false);
+        }
     }
 
     // Handle Database Setup Form
@@ -1608,30 +1612,26 @@
     }
 
     // Fetch and Sync Data from Supabase Database tables
-    async function syncDataFromDatabase() {
-        showLoading(true, 'Fetching records...');
+    async function syncDataFromDatabase(showSpinner = true) {
+        if (showSpinner) showLoading(true, 'Fetching records...');
         
         try {
-            // Fetch entries
-            const { data: entries, error: entriesErr } = await supabaseClient
-                .from('ledger_entries')
-                .select('*')
-                .order('date', { ascending: false })
-                .order('created_at', { ascending: false });
+            // Fetch everything in parallel using Promise.all (extremely fast load time)
+            const [entriesRes, sourcesRes, categoriesRes, accountsRes] = await Promise.all([
+                supabaseClient.from('ledger_entries').select('*').order('date', { ascending: false }).order('created_at', { ascending: false }),
+                supabaseClient.from('ledger_sources').select('name'),
+                supabaseClient.from('ledger_categories').select('name'),
+                supabaseClient.from('ledger_accounts').select('name')
+            ]);
 
-            // Fetch configs
-            const { data: sources, error: sourcesErr } = await supabaseClient.from('ledger_sources').select('name');
-            const { data: categories, error: catsErr } = await supabaseClient.from('ledger_categories').select('name');
-            const { data: accounts, error: accsErr } = await supabaseClient.from('ledger_accounts').select('name');
-
-            if (entriesErr || sourcesErr || catsErr || accsErr) {
+            if (entriesRes.error || sourcesRes.error || categoriesRes.error || accountsRes.error) {
                 throw new Error('Database fetch error.');
             }
 
-            ledgerState.entries = entries || [];
-            ledgerState.sources = (sources || []).map(s => s.name);
-            ledgerState.categories = (categories || []).map(c => c.name);
-            ledgerState.accounts = (accounts || []).map(a => a.name);
+            ledgerState.entries = entriesRes.data || [];
+            ledgerState.sources = (sourcesRes.data || []).map(s => s.name);
+            ledgerState.categories = (categoriesRes.data || []).map(c => c.name);
+            ledgerState.accounts = (accountsRes.data || []).map(a => a.name);
 
             // Populate defaults if it's a completely new user
             if (ledgerState.sources.length === 0 && ledgerState.categories.length === 0 && ledgerState.accounts.length === 0) {
@@ -1645,7 +1645,7 @@
         } catch (err) {
             showToast('Failed to fetch data from cloud database.', 'danger');
         } finally {
-            showLoading(false);
+            if (showSpinner) showLoading(false);
         }
     }
 
