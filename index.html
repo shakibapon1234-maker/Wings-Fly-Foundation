@@ -188,33 +188,88 @@
         }
 
         .stat-card {
-            background: var(--glass-bg);
             backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
             border-radius: 16px;
             padding: 24px;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
         }
 
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        .stat-card.income {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(10, 14, 39, 0.75) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.25);
         }
 
-        .stat-card::before {
+        .stat-card.expense {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(10, 14, 39, 0.75) 100%);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+        }
+
+        .stat-card.balance {
+            background: linear-gradient(135deg, rgba(0, 217, 255, 0.08) 0%, rgba(10, 14, 39, 0.75) 100%);
+            border: 1px solid rgba(0, 217, 255, 0.25);
+        }
+
+        .stat-card.income:hover {
+            transform: translateY(-5px);
+            border-color: rgba(16, 185, 129, 0.6);
+            box-shadow: 0 8px 30px rgba(16, 185, 129, 0.25);
+        }
+
+        .stat-card.expense:hover {
+            transform: translateY(-5px);
+            border-color: rgba(239, 68, 68, 0.6);
+            box-shadow: 0 8px 30px rgba(239, 68, 68, 0.25);
+        }
+
+        .stat-card.balance:hover {
+            transform: translateY(-5px);
+            border-color: rgba(0, 217, 255, 0.6);
+            box-shadow: 0 8px 30px rgba(0, 217, 255, 0.25);
+        }
+
+        /* Subtle grid background pattern inside card */
+        .stat-card.income::after {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(rgba(16, 185, 129, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(16, 185, 129, 0.04) 1px, transparent 1px);
+            background-size: 15px 15px;
+            pointer-events: none;
+            z-index: 0;
         }
 
-        .stat-card.income::before { background-color: var(--accent-success); }
-        .stat-card.expense::before { background-color: var(--accent-danger); }
-        .stat-card.balance::before { background-color: var(--accent-primary); }
+        .stat-card.expense::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(rgba(239, 68, 68, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(239, 68, 68, 0.04) 1px, transparent 1px);
+            background-size: 15px 15px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .stat-card.balance::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(rgba(0, 217, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 217, 255, 0.04) 1px, transparent 1px);
+            background-size: 15px 15px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .stat-header, .stat-value {
+            position: relative;
+            z-index: 1;
+        }
 
         .stat-header {
             display: flex;
@@ -227,11 +282,17 @@
         .stat-title {
             font-size: 1rem;
             font-weight: 600;
+            letter-spacing: 0.5px;
         }
+
+        .stat-card.income .stat-title { color: rgba(16, 185, 129, 0.85); }
+        .stat-card.expense .stat-title { color: rgba(239, 68, 68, 0.85); }
+        .stat-card.balance .stat-title { color: rgba(0, 217, 255, 0.85); }
 
         .stat-icon {
             font-size: 1.4rem;
-            opacity: 0.8;
+            opacity: 0.9;
+            filter: drop-shadow(0 0 5px currentColor);
         }
 
         .stat-card.income .stat-icon { color: var(--accent-success); }
@@ -241,10 +302,24 @@
         .stat-value {
             font-size: 2rem;
             font-weight: 700;
-            color: var(--text-main);
             display: flex;
             align-items: center;
             gap: 5px;
+        }
+
+        .stat-card.income .stat-value {
+            color: var(--accent-success);
+            text-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .stat-card.expense .stat-value {
+            color: var(--accent-danger);
+            text-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .stat-card.balance .stat-value {
+            color: var(--accent-primary);
+            text-shadow: 0 0 15px rgba(0, 217, 255, 0.3);
         }
 
         /* Two Column Layout for Dashboard */
@@ -1691,11 +1766,13 @@
         const balanceElement = document.getElementById('total-balance');
         balanceElement.textContent = totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         
-        // Dynamic balance colors
+        // Dynamic balance colors (sets parent element so ৳ symbol also changes color)
         if (totalBalance < 0) {
-            balanceElement.style.color = 'var(--accent-danger)';
+            balanceElement.parentElement.style.color = 'var(--accent-danger)';
+            balanceElement.parentElement.style.textShadow = '0 0 15px rgba(239, 68, 68, 0.3)';
         } else {
-            balanceElement.style.color = 'var(--accent-success)';
+            balanceElement.parentElement.style.color = 'var(--accent-success)';
+            balanceElement.parentElement.style.textShadow = '0 0 15px rgba(16, 185, 129, 0.3)';
         }
 
         // Render account-wise lists
