@@ -697,6 +697,61 @@
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+            }
+            #bg-canvas, header, .stats-grid, .sidebar-column, .ledger-controls, .ledger-actions, .btn-danger, .btn-primary, .toast, #db-config-screen, #auth-screen, .panel-title i, th:last-child, td:last-child {
+                display: none !important;
+            }
+            .container {
+                max-width: 100% !important;
+                width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .dashboard-content {
+                display: block !important;
+            }
+            .panel {
+                background: white !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                color: black !important;
+            }
+            .panel-title {
+                color: black !important;
+                border-bottom: 2px solid #333 !important;
+                padding-bottom: 10px !important;
+                font-size: 1.5rem !important;
+            }
+            .table-responsive {
+                overflow: visible !important;
+            }
+            .ledger-table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                color: black !important;
+            }
+            .ledger-table th, .ledger-table td {
+                border: 1px solid #ddd !important;
+                color: black !important;
+                padding: 8px !important;
+                background: transparent !important;
+            }
+            .ledger-table th {
+                background-color: #f2f2f2 !important;
+                font-weight: bold !important;
+            }
+            .ledger-table th:last-child, .ledger-table td:last-child {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -891,6 +946,21 @@
                         </div>
                     </div>
 
+                    <div class="ledger-actions" style="margin-top: 15px; margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn" onclick="exportCSV('all')" style="width: auto; padding: 8px 16px; font-size: 0.9rem; background: var(--accent-primary); border: 1px solid var(--accent-primary); color: #0a0e27; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-file-csv"></i> Export All CSV
+                        </button>
+                        <button class="btn" onclick="exportCSV('income')" style="width: auto; padding: 8px 16px; font-size: 0.9rem; background: var(--accent-success); border: 1px solid var(--accent-success); color: #0a0e27; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-file-invoice-dollar"></i> Export Investments CSV
+                        </button>
+                        <button class="btn" onclick="exportCSV('expense')" style="width: auto; padding: 8px 16px; font-size: 0.9rem; background: var(--accent-danger); border: 1px solid var(--accent-danger); color: #f8fafc; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-file-invoice"></i> Export Expenses CSV
+                        </button>
+                        <button class="btn" onclick="printLedger()" style="width: auto; padding: 8px 16px; font-size: 0.9rem; background: var(--accent-purple); border: 1px solid var(--accent-purple); color: #f8fafc; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-print"></i> Print Ledger
+                        </button>
+                    </div>
+
                     <!-- Ledger Table -->
                     <div class="table-responsive">
                         <table class="ledger-table" id="ledger-table">
@@ -908,6 +978,9 @@
                             <tbody id="ledger-tbody">
                                 <!-- Dynamically filled -->
                             </tbody>
+                            <tfoot id="ledger-tfoot">
+                                <!-- Dynamically filled -->
+                            </tfoot>
                         </table>
                     </div>
                 </div>
@@ -1392,7 +1465,100 @@
                     <td colspan="7" class="empty-text">No matching transactions found in the ledger.</td>
                 </tr>
             `;
+            document.getElementById('ledger-tfoot').innerHTML = '';
+        } else {
+            // Calculate totals for footer
+            let totalIncome = 0;
+            let totalExpense = 0;
+            filteredEntries.forEach(entry => {
+                if (entry.type === 'income') {
+                    totalIncome += entry.amount;
+                } else {
+                    totalExpense += entry.amount;
+                }
+            });
+            const netAmount = totalIncome - totalExpense;
+
+            const tfoot = document.getElementById('ledger-tfoot');
+            let totalHTML = '';
+            const incomeStr = `+${totalIncome.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ৳`;
+            const expenseStr = `-${totalExpense.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ৳`;
+            const netPrefix = netAmount >= 0 ? '+' : '';
+            const netColor = netAmount >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)';
+            const netStr = `${netPrefix}${netAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ৳`;
+
+            if (filterType === 'income') {
+                totalHTML = `
+                    <tr style="border-top: 2px solid var(--border-color); background: rgba(16, 185, 129, 0.05);">
+                        <td colspan="4" style="text-align: right; font-weight: bold; font-size: 0.95rem;">Total Income:</td>
+                        <td style="color: var(--accent-success); font-weight: bold; font-size: 0.95rem; white-space: nowrap;">${incomeStr}</td>
+                        <td colspan="2"></td>
+                    </tr>
+                `;
+            } else if (filterType === 'expense') {
+                totalHTML = `
+                    <tr style="border-top: 2px solid var(--border-color); background: rgba(239, 68, 68, 0.05);">
+                        <td colspan="4" style="text-align: right; font-weight: bold; font-size: 0.95rem;">Total Expense:</td>
+                        <td style="color: var(--accent-danger); font-weight: bold; font-size: 0.95rem; white-space: nowrap;">${expenseStr}</td>
+                        <td colspan="2"></td>
+                    </tr>
+                `;
+            } else {
+                totalHTML = `
+                    <tr style="border-top: 2px solid var(--border-color); background: rgba(255, 255, 255, 0.02);">
+                        <td colspan="4" style="text-align: right; font-weight: 700; font-size: 0.9rem; line-height: 1.6;">
+                            <span style="color: var(--accent-success); margin-right: 15px;">Total Income: ${incomeStr}</span>
+                            <span style="color: var(--accent-danger); margin-right: 15px;">Total Expense: ${expenseStr}</span>
+                            <span style="color: var(--text-main);">Net:</span>
+                        </td>
+                        <td style="color: ${netColor}; font-weight: bold; font-size: 0.95rem; white-space: nowrap;">${netStr}</td>
+                        <td colspan="2"></td>
+                    </tr>
+                `;
+            }
+            tfoot.innerHTML = totalHTML;
         }
+    }
+
+    // Export CSV and Print functions
+    function exportCSV(typeFilter) {
+        let filteredEntries = ledgerState.entries;
+        if (typeFilter === 'income') {
+            filteredEntries = ledgerState.entries.filter(e => e.type === 'income');
+        } else if (typeFilter === 'expense') {
+            filteredEntries = ledgerState.entries.filter(e => e.type === 'expense');
+        }
+
+        if (filteredEntries.length === 0) {
+            showToast('No records to export!', 'danger');
+            return;
+        }
+
+        let csvContent = "Date,Type,Source/Sector,Account,Amount,Description\n";
+        filteredEntries.forEach(entry => {
+            const date = entry.date || '';
+            const type = entry.type === 'income' ? 'Income' : 'Expense';
+            const sourceOrSector = entry.category || '';
+            const account = entry.account || '';
+            const amount = entry.amount || 0;
+            const description = (entry.notes || '').replace(/"/g, '""');
+
+            csvContent += `"${date}","${type}","${sourceOrSector}","${account}",${amount},"${description}"\n`;
+        });
+
+        const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `wings_fly_ledger_${typeFilter}_${new Date().toISOString().slice(0,10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast('CSV downloaded successfully!');
+    }
+
+    function printLedger() {
+        window.print();
     }
 
     // Render Settings lists
