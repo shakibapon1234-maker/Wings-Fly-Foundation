@@ -705,6 +705,36 @@
             height: fit-content;
         }
 
+        .password-input-wrap {
+            position: relative;
+        }
+
+        .password-input-wrap .input-control {
+            padding-right: 48px;
+        }
+
+        .password-toggle {
+            position: absolute;
+            top: 50%;
+            right: 8px;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            border: 0;
+            border-radius: 7px;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .password-toggle:hover,
+        .password-toggle:focus-visible {
+            color: var(--accent-primary);
+            background: rgba(0, 217, 255, 0.1);
+            outline: none;
+        }
+
         .settings-header {
             display: flex;
             justify-content: space-between;
@@ -1147,7 +1177,10 @@
             
             <div class="form-group">
                 <label class="form-label" for="auth-password">Password</label>
-                <input type="password" id="auth-password" class="input-control display-font" placeholder="••••••••" required>
+                <div class="password-input-wrap">
+                    <input type="password" id="auth-password" class="input-control display-font" placeholder="••••••••" required>
+                    <button type="button" class="password-toggle" onclick="togglePasswordVisibility('auth-password', this)" aria-label="Show password" title="Show password"><i class="fa-solid fa-eye"></i></button>
+                </div>
             </div>
             
             <button type="submit" class="btn btn-primary" id="auth-btn" style="margin-top: 10px;">
@@ -1479,6 +1512,29 @@
                 </form>
             </div>
 
+            <!-- Password Management -->
+            <div class="panel blue-theme settings-card">
+                <h3 class="panel-title"><i class="fa-solid fa-key" style="color: var(--accent-primary);"></i> Change Password</h3>
+                <p class="form-label" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">Choose a new password for your signed-in account.</p>
+                <form onsubmit="handlePasswordChange(event)">
+                    <div class="form-group">
+                        <label class="form-label" for="new-password">New Password</label>
+                        <div class="password-input-wrap">
+                            <input type="password" id="new-password" class="input-control" minlength="6" autocomplete="new-password" required>
+                            <button type="button" class="password-toggle" onclick="togglePasswordVisibility('new-password', this)" aria-label="Show new password" title="Show password"><i class="fa-solid fa-eye"></i></button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="confirm-new-password">Confirm New Password</label>
+                        <div class="password-input-wrap">
+                            <input type="password" id="confirm-new-password" class="input-control" minlength="6" autocomplete="new-password" required>
+                            <button type="button" class="password-toggle" onclick="togglePasswordVisibility('confirm-new-password', this)" aria-label="Show confirmation password" title="Show password"><i class="fa-solid fa-eye"></i></button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-key"></i> Update Password</button>
+                </form>
+            </div>
+
             <!-- Database Configurations & Disconnect -->
             <div class="panel purple-theme settings-card" style="grid-column: 1 / -1;">
                 <h3 class="panel-title"><i class="fa-solid fa-circle-nodes" style="color: var(--accent-primary);"></i> Cloud Sync & Database Settings</h3>
@@ -1674,6 +1730,42 @@
             wrapper.innerHTML = 'Don\'t have an account? <span class="flow-link" onclick="toggleAuthMode(\'signup\')">Sign Up</span>';
             modeInput.value = 'login';
         }
+    }
+
+    function togglePasswordVisibility(inputId, button) {
+        const input = document.getElementById(inputId);
+        const isHidden = input.type === 'password';
+        input.type = isHidden ? 'text' : 'password';
+        button.innerHTML = `<i class="fa-solid fa-${isHidden ? 'eye-slash' : 'eye'}"></i>`;
+        button.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+        button.title = isHidden ? 'Hide password' : 'Show password';
+    }
+
+    async function handlePasswordChange(event) {
+        event.preventDefault();
+        const newPassword = document.getElementById('new-password').value;
+        const confirmPassword = document.getElementById('confirm-new-password').value;
+
+        if (newPassword.length < 6) {
+            showToast('Password must be at least 6 characters.', 'danger');
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            showToast('New passwords do not match.', 'danger');
+            return;
+        }
+
+        showLoading(true, 'Updating password...');
+        const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+        showLoading(false);
+
+        if (error) {
+            showToast(error.message, 'danger');
+            return;
+        }
+
+        event.target.reset();
+        showToast('Password updated successfully.');
     }
 
     // Handle Login & Registration Authentication
