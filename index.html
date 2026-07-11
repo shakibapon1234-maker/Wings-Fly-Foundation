@@ -11,10 +11,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Supabase JS Client library -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     
     <!-- Chart.js CDN for visual insights -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -1101,14 +1101,14 @@
             To keep your data safe and private, connection keys are stored only in your <strong>local browser</strong> (never exposed on GitHub). Obtain these in your Supabase project under <code>Project Settings -> API</code>.
         </div>
 
-        <form id="db-config-form" onsubmit="handleDbSetup(event)">
+        <form id="db-config-form" onsubmit="handleDbSetup(event)" autocomplete="off">
             <div class="form-group">
                 <label class="form-label" for="db-url">Supabase Project URL</label>
-                <input type="url" id="db-url" class="input-control display-font" placeholder="https://xxxx.supabase.co" required>
+                <input type="url" id="db-url" class="input-control display-font" placeholder="https://xxxx.supabase.co" autocomplete="off" required>
             </div>
             <div class="form-group">
                 <label class="form-label" for="db-key">Supabase Anon Key</label>
-                <input type="password" id="db-key" class="input-control display-font" placeholder="eyJhbGciOi..." required>
+                <input type="text" id="db-key" class="input-control display-font" placeholder="eyJhbGciOi..." autocomplete="off" style="-webkit-text-security: disc;" required>
             </div>
             <button type="submit" class="btn btn-primary" style="margin-top: 10px;">
                 <i class="fa-solid fa-plug"></i> Save & Connect Database
@@ -1506,6 +1506,13 @@
 </svg>
 
 <script>
+    // Supabase Credentials Configuration
+    // Fill these in if you want to connect to a specific Supabase project automatically,
+    // so users do not have to enter the URL and Anon Key on first load.
+    // The Anon Key is safe to expose in client-side code when Row Level Security (RLS) is enabled.
+    const SUPABASE_URL = 'https://sumkorzobbdtgxqekdtl.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1bWtvcnpvYmJkdGd4cWVrZHRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwMTc3NzcsImV4cCI6MjA5ODU5Mzc3N30.bRcwKgj9nzYP5yLPR8LCU_4utUzjQfjcZF4Q4x097x4';
+
     // State management
     let supabaseClient = null;
     let ledgerState = {
@@ -1567,15 +1574,15 @@
 
     // Initialize application on load
     async function init() {
-        const dbUrl = localStorage.getItem('supabase_ledger_url');
-        const dbKey = localStorage.getItem('supabase_ledger_key');
+        const dbUrl = SUPABASE_URL || localStorage.getItem('supabase_ledger_url');
+        const dbKey = SUPABASE_ANON_KEY || localStorage.getItem('supabase_ledger_key');
 
         // Hide all screens
         document.getElementById('db-config-screen').style.display = 'none';
         document.getElementById('auth-screen').style.display = 'none';
         document.getElementById('main-app').style.display = 'none';
 
-        // Pre-fill fields if they exist in localStorage
+        // Pre-fill fields if they exist in localStorage or config
         if (dbUrl) document.getElementById('db-url').value = dbUrl;
         if (dbKey) document.getElementById('db-key').value = dbKey;
 
@@ -2543,8 +2550,12 @@
         }
     })();
 
-    // Trigger Initialisation on Load
-    window.onload = init;
+    // Trigger Initialisation on DOM Content Loaded (much faster than window.onload)
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 </script>
 
 </body>
